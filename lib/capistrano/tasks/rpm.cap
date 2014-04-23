@@ -1,0 +1,22 @@
+namespace :rpm do
+  desc 'Notify New Relic'
+  task :notify do
+    on primary(:app) do
+      info 'Notifying New Relic of deploy'
+      within release_path do
+        with rails_env: fetch(:stage) do
+          execute :newrelic, 'deployments',
+            '-r', fetch(:current_revision, fetch(:branch)),
+            '-u', local_user
+        end
+      end
+    end
+  end
+  after 'deploy:finished', 'rpm:notify'
+end
+
+namespace :load do
+  task :defaults do
+    set :bundle_bins, fetch(:bundle_bins, []).push('newrelic')
+  end
+end
